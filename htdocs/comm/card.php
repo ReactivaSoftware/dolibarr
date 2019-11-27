@@ -974,10 +974,13 @@ if ($object->id > 0)
 	if (! empty($conf->ficheinter->enabled) && $user->rights->ficheinter->lire)
 	{
 		$sql = "SELECT s.nom, s.rowid, f.rowid as id, f.ref, f.fk_statut, f.duree as duration, f.datei as startdate";
+		$sql.= ", MIN(fd.date) as date";
 		$sql.= " FROM ".MAIN_DB_PREFIX."societe as s, ".MAIN_DB_PREFIX."fichinter as f";
+		$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."fichinterdet as fd ON (fd.fk_fichinter = f.rowid)";
 		$sql.= " WHERE f.fk_soc = s.rowid";
 		$sql.= " AND s.rowid = ".$object->id;
 		$sql.= " AND f.entity = ".$conf->entity;
+		$sql.= " GROUP BY f.rowid";
 		$sql.= " ORDER BY f.tms DESC";
 
 		$resql=$db->query($sql);
@@ -992,7 +995,7 @@ if ($object->id > 0)
 				print '<table class="noborder centpercent lastrecordtable">';
 
 			    print '<tr class="liste_titre">';
-				print '<td colspan="3"><table width="100%" class="nobordernopadding"><tr><td>'.$langs->trans("LastInterventions", ($num<=$MAXLIST?"":$MAXLIST)).'</td><td class="right"><a class="notasortlink" href="'.DOL_URL_ROOT.'/fichinter/list.php?socid='.$object->id.'">'.$langs->trans("AllInterventions").' <span class="badge">'.$num.'</span></td>';
+				print '<td colspan="4"><table width="100%" class="nobordernopadding"><tr><td>'.$langs->trans("LastInterventions", ($num<=$MAXLIST?"":$MAXLIST)).'</td><td class="right"><a class="notasortlink" href="'.DOL_URL_ROOT.'/fichinter/list.php?socid='.$object->id.'">'.$langs->trans("AllInterventions").' <span class="badge">'.$num.'</span></td>';
 				print '<td width="20px" class="right"><a href="'.DOL_URL_ROOT.'/fichinter/stats/index.php?socid='.$object->id.'">'.img_picto($langs->trans("Statistics"), 'stats').'</a></td>';
 				print '</tr></table></td>';
 				print '</tr>';
@@ -1009,6 +1012,7 @@ if ($object->id > 0)
 				print '<tr class="oddeven">';
 				print '<td class="nowrap"><a href="'.DOL_URL_ROOT.'/fichinter/card.php?id='.$objp->id.'">'.img_object($langs->trans("ShowPropal"), "propal").' '.$objp->ref.'</a></td>'."\n";
                 //print '<td class="right" width="80px">'.dol_print_date($db->jdate($objp->startdate)).'</td>'."\n";
+				print '<td class="nowrap">'.dol_print_date($db->jdate($objp->date),'day', 'tzuser').'</td>';
 				print '<td class="right" style="min-width: 60px">'.convertSecondToTime($objp->duration).'</td>'."\n";
 				print '<td class="nowrap right" style="min-width: 60px">'.$fichinter_static->getLibStatut(5).'</td>'."\n";
 				print '</tr>';

@@ -70,6 +70,7 @@ $search_customer_code=trim(GETPOST('search_customer_code', 'alpha'));
 $search_supplier_code=trim(GETPOST('search_supplier_code', 'alpha'));
 $search_account_customer_code=trim(GETPOST('search_account_customer_code', 'alpha'));
 $search_account_supplier_code=trim(GETPOST('search_account_supplier_code', 'alpha'));
+$search_address=trim(GETPOST("search_address", "alpha"));
 $search_town=trim(GETPOST("search_town", 'alpha'));
 $search_zip=trim(GETPOST("search_zip", 'alpha'));
 $search_state=trim(GETPOST("search_state", 'alpha'));
@@ -146,6 +147,7 @@ $fieldstosearchall = array(
 	's.ape'=>"ProfId3",
 	's.phone'=>"Phone",
 	's.fax'=>"Fax",
+	's.address'=>"Address",
 );
 if (($tmp = $langs->transnoentities("ProfId4".$mysoc->country_code)) && $tmp != "ProfId4".$mysoc->country_code && $tmp != '-') $fieldstosearchall['s.idprof4']='ProfId4';
 if (($tmp = $langs->transnoentities("ProfId5".$mysoc->country_code)) && $tmp != "ProfId5".$mysoc->country_code && $tmp != '-') $fieldstosearchall['s.idprof5']='ProfId5';
@@ -181,6 +183,7 @@ $arrayfields=array(
 	's.code_fournisseur'=>array('label'=>"SupplierCodeShort", 'checked'=>$checkedsuppliercode, 'enabled'=>(! empty($conf->fournisseur->enabled))),
 	's.code_compta'=>array('label'=>"CustomerAccountancyCodeShort", 'checked'=>$checkedcustomeraccountcode),
 	's.code_compta_fournisseur'=>array('label'=>"SupplierAccountancyCodeShort", 'checked'=>$checkedsupplieraccountcode, 'enabled'=>(! empty($conf->fournisseur->enabled))),
+	's.address'=>array('label'=>"Address", 'checked'=>0),
 	's.town'=>array('label'=>"Town", 'checked'=>1),
 	's.zip'=>array('label'=>"Zip", 'checked'=>1),
 	'state.nom'=>array('label'=>"State", 'checked'=>0),
@@ -272,6 +275,7 @@ if (empty($reshook))
 		$search_supplier_code='';
 		$search_account_customer_code='';
 		$search_account_supplier_code='';
+		$search_address="";
 		$search_town="";
 		$search_zip="";
 		$search_state="";
@@ -370,7 +374,7 @@ if ($resql)
 }
 else dol_print_error($db);
 
-$sql = "SELECT s.rowid, s.nom as name, s.name_alias, s.barcode, s.town, s.zip, s.datec, s.code_client, s.code_fournisseur, s.logo,";
+$sql = "SELECT s.rowid, s.nom as name, s.name_alias, s.barcode, s.address, s.town, s.zip, s.datec, s.code_client, s.code_fournisseur, s.logo,";
 $sql.= " st.libelle as stcomm, s.fk_stcomm as stcomm_id, s.fk_prospectlevel, s.prefix_comm, s.client, s.fournisseur, s.canvas, s.status as status,";
 $sql.= " s.email, s.phone, s.fax, s.url, s.siren as idprof1, s.siret as idprof2, s.ape as idprof3, s.idprof4 as idprof4, s.idprof5 as idprof5, s.idprof6 as idprof6, s.tva_intra, s.fk_pays,";
 $sql.= " s.tms as date_update, s.datec as date_creation,";
@@ -428,6 +432,7 @@ if ($search_customer_code) $sql.= natural_search("s.code_client", $search_custom
 if ($search_supplier_code) $sql.= natural_search("s.code_fournisseur", $search_supplier_code);
 if ($search_account_customer_code) $sql.= natural_search("s.code_compta", $search_account_customer_code);
 if ($search_account_supplier_code) $sql.= natural_search("s.code_compta_fournisseur", $search_account_supplier_code);
+if ($search_address)       $sql.= natural_search("s.address", $search_address);
 if ($search_town)          $sql.= natural_search("s.town", $search_town);
 if (strlen($search_zip))   $sql.= natural_search("s.zip", $search_zip);
 if ($search_state)         $sql.= natural_search("state.nom", $search_state);
@@ -524,6 +529,7 @@ if ($search_sale > 0)	   $param.= '&search_sale='.urlencode($search_sale);
 if ($search_id > 0)        $param.= "&search_id=".urlencode($search_id);
 if ($search_nom != '')     $param.= "&search_nom=".urlencode($search_nom);
 if ($search_alias != '')   $param.= "&search_alias=".urlencode($search_alias);
+if ($search_address != '') $param.= "&search_address=".urlencode($search_address);
 if ($search_town != '')    $param.= "&search_town=".urlencode($search_town);
 if ($search_zip != '')     $param.= "&search_zip=".urlencode($search_zip);
 if ($search_phone != '')   $param.= "&search_phone=".urlencode($search_phone);
@@ -731,6 +737,13 @@ if (! empty($arrayfields['s.code_compta_fournisseur']['checked']))
 {
 	print '<td class="liste_titre">';
 	print '<input class="flat maxwidth75imp" type="text" name="search_account_supplier_code" value="'.dol_escape_htmltag($search_account_supplier_code).'">';
+	print '</td>';
+}
+// Address
+if (! empty($arrayfields['s.address']['checked']))
+{
+	print '<td class="liste_titre">';
+	print '<input class="flat searchstring maxwidth75imp" type="text" name="search_address" value="'.dol_escape_htmltag($search_address).'">';
 	print '</td>';
 }
 // Town
@@ -942,6 +955,7 @@ if (! empty($arrayfields['s.code_client']['checked']))             print_liste_f
 if (! empty($arrayfields['s.code_fournisseur']['checked']))        print_liste_field_titre($arrayfields['s.code_fournisseur']['label'], $_SERVER["PHP_SELF"], "s.code_fournisseur", "", $param, '', $sortfield, $sortorder);
 if (! empty($arrayfields['s.code_compta']['checked']))             print_liste_field_titre($arrayfields['s.code_compta']['label'], $_SERVER["PHP_SELF"], "s.code_compta", "", $param, '', $sortfield, $sortorder);
 if (! empty($arrayfields['s.code_compta_fournisseur']['checked'])) print_liste_field_titre($arrayfields['s.code_compta_fournisseur']['label'], $_SERVER["PHP_SELF"], "s.code_compta_fournisseur", "", $param, '', $sortfield, $sortorder);
+if (! empty($arrayfields['s.address']['checked']))        print_liste_field_titre($arrayfields['s.address']['label'], $_SERVER["PHP_SELF"], "s.address", "", $param, '', $sortfield, $sortorder);
 if (! empty($arrayfields['s.town']['checked']))           print_liste_field_titre($arrayfields['s.town']['label'], $_SERVER["PHP_SELF"], "s.town", "", $param, '', $sortfield, $sortorder);
 if (! empty($arrayfields['s.zip']['checked']))            print_liste_field_titre($arrayfields['s.zip']['label'], $_SERVER["PHP_SELF"], "s.zip", "", $param, '', $sortfield, $sortorder);
 if (! empty($arrayfields['state.nom']['checked']))        print_liste_field_titre($arrayfields['state.nom']['label'], $_SERVER["PHP_SELF"], "state.nom", "", $param, '', $sortfield, $sortorder);
@@ -1069,6 +1083,12 @@ while ($i < min($num, $limit))
 	if (! empty($arrayfields['s.code_compta_fournisseur']['checked']))
 	{
 		print '<td>'.$obj->code_compta_fournisseur.'</td>';
+		if (! $i) $totalarray['nbfield']++;
+	}
+	// Address
+	if (! empty($arrayfields['s.address']['checked']))
+	{
+		print "<td>".$obj->address."</td>\n";
 		if (! $i) $totalarray['nbfield']++;
 	}
 	// Town
